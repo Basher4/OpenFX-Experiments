@@ -11,4 +11,9 @@ include_directories(include)
 
 add_subdirectory(plugins)
 
-add_executable(openfx_experiments main.cpp)
+add_executable(openfx_experiments main.cpp
+        src/imageIo.cpp)
+
+find_package(OpenCV CONFIG REQUIRED)
+target_link_libraries(openfx_experiments ${OpenCV_LIBS})
+#target_link_libraries(openfx_experiments PRIVATE opencv_ml opencv_dnn opencv_core opencv_flann)
