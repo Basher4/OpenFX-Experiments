@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     }
 
     RenderImageWithOfx(argv[1]);
-    // ShowImage();
+    ShowImage();
     return 0;
 }
 

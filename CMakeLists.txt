@@ -14,7 +14,7 @@ add_subdirectory(plugins)
 add_executable(openfx_experiments main.cpp
         src/imageIo.cpp
         src/host.cpp
-        src/propSuite.cpp
+        src/PropertySet.cpp
 )
 
 find_package(OpenCV CONFIG REQUIRED)
