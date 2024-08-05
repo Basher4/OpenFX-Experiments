@@ -1,7 +1,12 @@
 #include <cstdio>
 #include <iostream>
 #include <vector>
+
+#if defined(WIN32) || defined(WIN64)
 #include <Windows.h>
+#elif defined(__linux__)
+#include <dlfcn.h>
+#endif
 
 #include "openfx/ofxCore.h"
 
@@ -54,17 +59,24 @@ void RenderImageWithOfx(const char *path)
     }
 }
 
-
 std::vector<OfxPlugin*> GetPlugins(const char *libraryPath)
 {
     // We're leaking this handle.
-    const HMODULE ofxDll = LoadLibraryA(libraryPath);
-    assert(ofxDll != nullptr);
+#if defined(WIN32) || defined(WIN64)
+    const HMODULE ofxDll = LoadLibraryA(libraryPath); assert(ofxDll != nullptr);
+    const void* getNumPluginsPtr = GetProcAddress(ofxDll, "OfxGetNumberOfPlugins");
+    const void* getPluginPtr = GetProcAddress(ofxDll, "OfxGetPlugin");
+#elif defined(__linux__)
+    void* ofxDll = dlopen(libraryPath, RTLD_LAZY); assert(ofxDll != nullptr);
+    void* getNumPluginsPtr = dlsym(ofxDll, "OfxGetNumberOfPlugins");
+    void* getPluginPtr = dlsym(ofxDll, "OfxGetPlugin");
+#endif
 
-    const auto ofxGetNumberOfPlugins = reinterpret_cast<fn_ofxGetNumberOfPlugins>(GetProcAddress(ofxDll, "OfxGetNumberOfPlugins"));
-    assert(ofxGetNumberOfPlugins != nullptr);
-    const auto ofxGetPlugin = reinterpret_cast<fn_ofxGetPlugin>(GetProcAddress(ofxDll, "OfxGetPlugin"));
-    assert(ofxGetPlugin != nullptr);
+    assert(getNumPluginsPtr != nullptr);
+    const auto ofxGetNumberOfPlugins = reinterpret_cast<fn_ofxGetNumberOfPlugins>(getNumPluginsPtr);
+
+    assert(getPluginPtr != nullptr);
+    const auto ofxGetPlugin = reinterpret_cast<fn_ofxGetPlugin>(getPluginPtr);
 
     const int numPlugins = ofxGetNumberOfPlugins();
     std::vector<OfxPlugin*> result(numPlugins);
