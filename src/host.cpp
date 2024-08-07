@@ -6,6 +6,8 @@
 
 #include <cstdio>
 #include <string>
+
+#include <openfx/ofxMemory.h>
 #include <openfx/ofxProperty.h>
 
 Host::Host()
@@ -15,6 +17,7 @@ Host::Host()
 
     // Initialize hashmap of property suties. We'll ignore versions.
     m_HostProps.SetPointer(kOfxPropertySuite, 1, PropertySet::as_suite());
+    m_HostProps.SetPointer(kOfxMemorySuite, 1, MemorySuite::get_suite());
 }
 
 const void* Host::s_hostFetchSuite(OfxPropertySetHandle handle, const char* suiteName, int suiteVersion)

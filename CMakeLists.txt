@@ -14,6 +14,7 @@ add_subdirectory(plugins)
 add_executable(openfx_experiments main.cpp
         src/imageIo.cpp
         src/host.cpp
+        src/memorySuite.cpp
         src/propertySet.cpp
 )
 

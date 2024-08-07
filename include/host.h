@@ -5,6 +5,7 @@
 
 #include "openfx/ofxCore.h"
 #include "propertySet.h"
+#include "memorySuite.h"
 
 class Host {
 public:
