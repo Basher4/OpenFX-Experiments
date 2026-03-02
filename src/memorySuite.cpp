@@ -2,8 +2,6 @@
 
 #include "memorySuite.h"
 
-OfxMemorySuiteV1 g_MemorySuite;
-
 OfxStatus MemorySuite::memoryAlloc(void *handle, size_t nBytes, void **allocatedData)
 {
     *allocatedData = malloc(nBytes);
@@ -18,7 +16,9 @@ OfxStatus MemorySuite::memoryFree(void *allocatedData)
 
 OfxMemorySuiteV1* MemorySuite::get_suite()
 {
-    g_MemorySuite.memoryAlloc = MemorySuite::memoryAlloc;
-    g_MemorySuite.memoryFree = MemorySuite::memoryFree;
+    static OfxMemorySuiteV1 g_MemorySuite {
+        .memoryAlloc = memoryAlloc,
+        .memoryFree = memoryFree,
+    };
     return &g_MemorySuite;
 }

@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 4.1)
 project(openfx_experiments)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 26)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -17,6 +17,10 @@ add_executable(openfx_experiments main.cpp
         src/memorySuite.cpp
         src/propertySet.cpp
 )
+
+if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+    target_link_libraries(${PROJECT_NAME} stdc++exp) # std:: print, println, ...
+endif()
 
 find_package(OpenCV CONFIG REQUIRED)
 target_link_libraries(openfx_experiments ${OpenCV_LIBS})

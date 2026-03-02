@@ -64,8 +64,8 @@ std::vector<OfxPlugin*> GetPlugins(const char *libraryPath)
     // We're leaking this handle.
 #if defined(WIN32) || defined(WIN64)
     const HMODULE ofxDll = LoadLibraryA(libraryPath); assert(ofxDll != nullptr);
-    const void* getNumPluginsPtr = GetProcAddress(ofxDll, "OfxGetNumberOfPlugins");
-    const void* getPluginPtr = GetProcAddress(ofxDll, "OfxGetPlugin");
+    const FARPROC getNumPluginsPtr = GetProcAddress(ofxDll, "OfxGetNumberOfPlugins");
+    const FARPROC getPluginPtr = GetProcAddress(ofxDll, "OfxGetPlugin");
 #elif defined(__linux__)
     void* ofxDll = dlopen(libraryPath, RTLD_LAZY); assert(ofxDll != nullptr);
     void* getNumPluginsPtr = dlsym(ofxDll, "OfxGetNumberOfPlugins");
