@@ -18,5 +18,5 @@ private:
 
 private:
     OfxHost m_OfxHost {};
-    PropertySet m_HostProps;
+    PropertySet m_HostProps {"Host"};
 };

@@ -14,8 +14,13 @@ add_subdirectory(plugins)
 add_executable(openfx_experiments main.cpp
         src/imageIo.cpp
         src/host.cpp
-        src/memorySuite.cpp
         src/propertySet.cpp
+        src/imageEffectSuite.cpp
+        include/imageEffectSuite.h
+        src/imageEffect.cpp
+        include/imageEffect.h
+        include/types.h
+        src/memorySuite.cpp
 )
 
 if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL GNU)

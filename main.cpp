@@ -1,5 +1,7 @@
-#include <cstdio>
+#include <expected>
 #include <iostream>
+#include <print>
+#include <string>
 #include <vector>
 
 #if defined(WIN32) || defined(WIN64)
@@ -11,7 +13,9 @@
 #include "openfx/ofxCore.h"
 
 #include "host.h"
+#include "imageEffect.h"
 #include "imageIo.h"
+#include "openfx/ofxImageEffect.h"
 
 using fn_ofxGetNumberOfPlugins = int (*)();
 using fn_ofxGetPlugin = OfxPlugin* (*)(int);
@@ -19,6 +23,11 @@ using fn_ofxGetPlugin = OfxPlugin* (*)(int);
 std::vector<OfxPlugin*> GetPlugins(const char *libraryPath);
 void RenderImageWithOfx(const char *path);
 void ShowImage();
+
+std::expected<void, OfxStatus> PluginMain(
+    const OfxPlugin* plugin, const char *action, const char *msg,
+    const void *handle = nullptr, OfxPropertySetHandle inArgs = nullptr, OfxPropertySetHandle outArgs = nullptr
+);
 
 int main(int argc, char** argv)
 {
@@ -36,27 +45,33 @@ int main(int argc, char** argv)
 void RenderImageWithOfx(const char *path)
 {
     Host ofxHost;
-    OfxStatus status;
+    ImageEffect effect;
+    PropertySet inArgs;
 
     const auto plugins = GetPlugins(path);
     for (const auto plugin : plugins) {
-        printf("%s: %s\n", plugin->pluginApi, plugin->pluginIdentifier);
+        std::print("{}: {}\n", plugin->pluginApi, plugin->pluginIdentifier);
     }
 
     const auto plugin = plugins[0];
     plugin->setHost(ofxHost.OfxHandle());
 
-    status = plugin->mainEntry(kOfxActionDescribe, nullptr, nullptr, nullptr);
-    if (status != kOfxStatOK) {
-        printf("Describe finished with %d\n", status);
-        return;
-    }
+    if (!PluginMain(plugin, kOfxActionLoad,     "Loading plugin")) { return; }
+    if (!PluginMain(plugin, kOfxActionDescribe, "Describing plugin", effect.OfxHandle())) { return; }
 
-    status = plugin->mainEntry(kOfxActionLoad, nullptr, nullptr, nullptr);
-    if (status != kOfxStatOK) {
-        printf("Load finished with %d\n", status);
+    // Describe in general context.
+    inArgs.SetString(kOfxImageEffectPropContext, 0, kOfxImageEffectContextGeneral);
+    if (!PluginMain(plugin, kOfxImageEffectActionDescribeInContext,
+                    "ImageEffect describing plugin in context", effect.OfxHandle(), inArgs.OfxHandle())) {
         return;
     }
+    std::print("Plugin description in general context:\n");
+    effect.DebugPrint();
+    inArgs.Clear();
+
+    // Render one frame of the plugin.
+
+    if (!PluginMain(plugin, kOfxActionUnload,   "Unloading plugin")) { return; }
 }
 
 std::vector<OfxPlugin*> GetPlugins(const char *libraryPath)
@@ -88,16 +103,26 @@ std::vector<OfxPlugin*> GetPlugins(const char *libraryPath)
     return result;
 }
 
+std::expected<void, OfxStatus> PluginMain(
+    const OfxPlugin* plugin, const char *action, const char *msg,
+    const void *handle, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs
+)
+{
+    std::print("{}...\n", msg);
+    OfxStatus status = plugin->mainEntry(action, handle, inArgs, outArgs);
+    if (status != kOfxStatOK) {
+        std::print("Failed with {}\n", status);
+        return std::unexpected{status};
+    }
+
+    std::print("OK\n\n");
+    return {};
+}
+
 void ShowImage()
 {
     auto img = image::Image::load("./starry_night.jpg");
-    printf("Width: %d x Height %d\n", img.width(), img.height());
-
-    for (int y = 0; y < 512; y++) {
-        for (int x = 0; x < 512; x++) {
-            img.at(x, y)->b = 0;
-        }
-    }
+    std::print("Width: {} x Height {}\n", img.width(), img.height());
 
     img.show_blocking();
 }

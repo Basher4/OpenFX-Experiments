@@ -4,9 +4,12 @@
 
 #include "host.h"
 
+#include "imageEffectSuite.h"
+
 #include <cstdio>
 #include <string>
 
+#include <openfx/ofxImageEffect.h>
 #include <openfx/ofxMemory.h>
 #include <openfx/ofxProperty.h>
 
@@ -15,9 +18,10 @@ Host::Host()
     m_OfxHost.host = reinterpret_cast<OfxPropertySetHandle>(&m_HostProps);
     m_OfxHost.fetchSuite = &Host::s_hostFetchSuite;
 
-    // Initialize hashmap of property suties. We'll ignore versions.
+    // Initialize hashmap of property suites.
     m_HostProps.SetPointer(kOfxPropertySuite, 1, PropertySet::as_suite());
     m_HostProps.SetPointer(kOfxMemorySuite, 1, MemorySuite::get_suite());
+    m_HostProps.SetPointer(kOfxImageEffectSuite, 1, ImageEffectSuite::as_suite());
 }
 
 const void* Host::s_hostFetchSuite(OfxPropertySetHandle handle, const char* suiteName, int suiteVersion)
