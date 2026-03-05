@@ -1,18 +1,19 @@
 #pragma once
 
+#include "imageEffectImageRef.h"
+
 #include <cstdint>
 #include <filesystem>
 #include <opencv2/core/mat.hpp>
 
 namespace image {
 
-#pragma pack(1)
 struct Pixel {
     uint8_t b;
     uint8_t g;
     uint8_t r;
+    uint8_t a;
 };
-#pragma pack(0)
 
 class Image {
 public:
@@ -26,6 +27,8 @@ public:
     [[nodiscard]] Pixel* at(const int32_t x, const int32_t y) { return &this->data()[y * this->width() + x]; }
 
     void show_blocking() const;
+
+    ImageEffectImageRef as_ofx_ref() const { return ImageEffectImageRef(*this); }
 
     void save(const std::filesystem::path& path) const;
 

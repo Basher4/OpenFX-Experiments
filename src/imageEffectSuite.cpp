@@ -1,6 +1,7 @@
 #include "imageEffectSuite.h"
 
 #include "imageEffect.h"
+#include "imageEffectImageRef.h"
 
 OfxImageEffectSuiteV1* ImageEffectSuite::as_suite()
 {
@@ -23,13 +24,26 @@ OfxImageEffectSuiteV1* ImageEffectSuite::as_suite()
             return kOfxStatOK;
         },
         .clipGetHandle = [](OfxImageEffectHandle imageEffect, const char* name, OfxImageClipHandle* clip, OfxPropertySetHandle* propertySet) {
-            return kOfxStatErrFatal;
+            auto effect = reinterpret_cast<ImageEffect*>(imageEffect);
+            auto effectClip = effect->GetClip(name);
+            if (!effectClip) {
+                return effectClip.error();
+            }
+
+            *clip = (*effectClip)->OfxHandle();
+            if (propertySet != nullptr) {
+                *propertySet = (*effectClip)->Properties().OfxHandle();
+            }
+
+            return kOfxStatOK;
         },
         .clipGetPropertySet = [](OfxImageClipHandle clip, OfxPropertySetHandle *propHandle) {
             return kOfxStatErrFatal;
         },
         .clipGetImage = [](OfxImageClipHandle clip, OfxTime time, const OfxRectD *region, OfxPropertySetHandle *imageHandle) {
-            return kOfxStatErrFatal;
+            auto effectClip = reinterpret_cast<ImageEffectClip*>(clip);
+            *imageHandle = effectClip->ImageRef()->Properties().OfxHandle();
+            return kOfxStatOK;
         },
         .clipReleaseImage = [](OfxPropertySetHandle imageHandle) {
             return kOfxStatErrFatal;

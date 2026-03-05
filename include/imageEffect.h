@@ -1,5 +1,6 @@
 #pragma once
 
+#include "imageEffectClip.h"
 #include "openfx/ofxImageEffect.h"
 #include "propertySet.h"
 #include "types.h"
@@ -10,6 +11,7 @@
 class ImageEffect {
 public:
     OfxResult<OfxPropertySetHandle> ClipDefine(std::string_view name);
+    OfxResult<ImageEffectClip*> GetClip(std::string_view name);
 
     void DebugPrint();
 
@@ -18,5 +20,5 @@ public:
 
 private:
     PropertySet m_Properties {"ImageEffect"};
-    std::unordered_map<std::string, std::unique_ptr<PropertySet>> m_ClipProperties;
+    std::unordered_map<std::string, std::unique_ptr<ImageEffectClip>> m_Clips;
 };

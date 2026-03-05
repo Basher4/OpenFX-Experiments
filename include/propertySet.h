@@ -11,14 +11,26 @@ public:
     PropertySet() = default;
     PropertySet(std::string id) : _Id(std::move(id)) {}
 
-    OfxStatus GetPointer(std::string property, int index, void** value);
-    OfxStatus SetPointer(std::string property, int index, void* value);
-    OfxStatus GetInt(std::string property, int index, int* value);
-    OfxStatus SetInt(std::string property, int index, int value);
-    OfxStatus GetString(std::string property, int index, char** value);
-    OfxStatus SetString(std::string property, int index, const char* value);
-    OfxStatus GetDouble(std::string property, int index, double* value);
-    OfxStatus SetDouble(std::string property, int index, double value);
+    OfxStatus GetPointer(std::string_view property, int index, void** value);
+    OfxStatus SetPointer(std::string_view property, int index, void* value);
+    OfxStatus GetInt(std::string_view property, int index, int* value);
+    OfxStatus SetInt(std::string_view property, int index, int value);
+    OfxStatus GetString(std::string_view property, int index, char** value);
+    OfxStatus SetString(std::string_view property, int index, const char* value);
+    OfxStatus GetDouble(std::string_view property, int index, double* value);
+    OfxStatus SetDouble(std::string_view property, int index, double value);
+
+    OfxStatus GetPointerN(std::string_view property, int count, void** value);
+    OfxStatus SetPointerN(std::string_view property, int count, void* const* value);
+    OfxStatus GetIntN(std::string_view property, int count, int* value);
+    OfxStatus SetIntN(std::string_view property, int count, const int* value);
+    OfxStatus GetStringN(std::string_view property, int count, char** value);
+    OfxStatus SetStringN(std::string_view property, int count, const char* const* value);
+    OfxStatus GetDoubleN(std::string_view property, int count, double* value);
+    OfxStatus SetDoubleN(std::string_view property, int count, const double* value);
+
+    OfxStatus SetN(std::string_view property, std::initializer_list<int> values);
+    OfxStatus SetN(std::string_view property, std::initializer_list<double> values);
 
     OfxPropertySetHandle OfxHandle() { return reinterpret_cast<OfxPropertySetHandle>(this); }
 
@@ -40,10 +52,29 @@ private:
         return kOfxStatOK;
     }
 
+    template <typename T>
+    OfxStatus GetN(std::map<Key, T>& props, std::string_view property, int count, T* out_values)
+    {
+        OfxStatus status = kOfxStatOK;
+        for (int index{}; index < count; index++) {
+            status |= Get(props, property, index, &out_values[index]);
+        }
+        return status;
+    }
+
     template <typename T, typename U>
     OfxStatus Set(std::map<Key, T>& props, std::string_view property, int index, U value)
     {
         props[Key{property, index}] = std::move(value);
+        return kOfxStatOK;
+    }
+
+    template <typename T, typename U>
+    OfxStatus SetN(std::map<Key, T>& props, std::string_view property, int count, U* values)
+    {
+        for (int index{}; index < count; index++) {
+            Set(props, property, index, values[index]);
+        }
         return kOfxStatOK;
     }
 

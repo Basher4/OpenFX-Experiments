@@ -1,16 +1,25 @@
 #include "imageEffect.h"
 
 #include <print>
+#include <ranges>
 
 OfxResult<OfxPropertySetHandle> ImageEffect::ClipDefine(std::string_view name)
 {
     std::string name_owned{name};
-    if (m_ClipProperties.contains(name_owned)) {
+    if (m_Clips.contains(name_owned)) {
         return std::unexpected{kOfxStatErrExists};
     }
 
-    m_ClipProperties[name_owned] = std::make_unique<PropertySet>(name_owned);
-    return m_ClipProperties[name_owned]->OfxHandle();
+    m_Clips[name_owned] = std::make_unique<ImageEffectClip>(name);
+    return m_Clips[name_owned]->Properties().OfxHandle();
+}
+
+OfxResult<ImageEffectClip*> ImageEffect::GetClip(std::string_view name)
+{
+    std::string name_owned{name};
+    auto it = m_Clips.find(name_owned);
+    if (it == m_Clips.end()) { return std::unexpected(kOfxStatErrUnknown); }
+    return it->second.get();
 }
 
 void ImageEffect::DebugPrint()
@@ -19,8 +28,7 @@ void ImageEffect::DebugPrint()
     m_Properties.DebugPrint();
     std::print("--------------------\n");
 
-    for (const auto& [name, clipProps] : m_ClipProperties) {
-        std::print("Clip '{}'\n", name);
+    for (const auto& clipProps : m_Clips | std::views::values) {
         clipProps->DebugPrint();
         std::print("--------------------\n");
     }

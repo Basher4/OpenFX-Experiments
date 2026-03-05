@@ -21,6 +21,10 @@ add_executable(openfx_experiments main.cpp
         include/imageEffect.h
         include/types.h
         src/memorySuite.cpp
+        src/imageEffectClip.cpp
+        include/imageEffectClip.h
+        src/imageEffectImageRef.cpp
+        include/imageEffectImageRef.h
 )
 
 if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL GNU)

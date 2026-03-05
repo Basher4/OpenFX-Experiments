@@ -21,8 +21,8 @@ using fn_ofxGetNumberOfPlugins = int (*)();
 using fn_ofxGetPlugin = OfxPlugin* (*)(int);
 
 std::vector<OfxPlugin*> GetPlugins(const char *libraryPath);
-void RenderImageWithOfx(const char *path);
-void ShowImage();
+void RenderImageWithOfx(const char *path, image::Image &srcImg);
+void ShowImage(image::Image &img);
 
 std::expected<void, OfxStatus> PluginMain(
     const OfxPlugin* plugin, const char *action, const char *msg,
@@ -37,12 +37,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    RenderImageWithOfx(argv[1]);
-    ShowImage();
+    auto img = image::Image::load("./starry_night.jpg");
+    RenderImageWithOfx(argv[1], img);
+    ShowImage(img);
     return 0;
 }
 
-void RenderImageWithOfx(const char *path)
+void RenderImageWithOfx(const char *path, image::Image &srcImg)
 {
     Host ofxHost;
     ImageEffect effect;
@@ -70,7 +71,22 @@ void RenderImageWithOfx(const char *path)
     inArgs.Clear();
 
     // Render one frame of the plugin.
+    auto srcClip = *effect.GetClip(kOfxImageEffectSimpleSourceClipName);
+    auto outClip = *effect.GetClip(kOfxImageEffectOutputClipName);
+    auto srcRef = srcImg.as_ofx_ref();
+    srcClip->SetImageRef(&srcRef);
+    outClip->SetImageRef(&srcRef);
+    // nb. Modify the image in place. Probably not always valid but oh hey.
 
+    inArgs.SetDouble(kOfxPropTime, 0, 0.0);
+    inArgs.SetN(kOfxImageEffectPropRenderWindow, {0, 0, (int)srcImg.width() / 2, (int)srcImg.height()});
+    if (!PluginMain(plugin, kOfxImageEffectActionRender, "ImageEffect render",
+                    effect.OfxHandle(), inArgs.OfxHandle())) {
+        return;
+    }
+
+
+    // Cleanup.
     if (!PluginMain(plugin, kOfxActionUnload,   "Unloading plugin")) { return; }
 }
 
@@ -119,10 +135,8 @@ std::expected<void, OfxStatus> PluginMain(
     return {};
 }
 
-void ShowImage()
+void ShowImage(image::Image &img)
 {
-    auto img = image::Image::load("./starry_night.jpg");
     std::print("Width: {} x Height {}\n", img.width(), img.height());
-
     img.show_blocking();
 }
