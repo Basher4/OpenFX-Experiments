@@ -25,6 +25,8 @@ add_executable(openfx_experiments main.cpp
         include/imageEffectClip.h
         src/imageEffectImageRef.cpp
         include/imageEffectImageRef.h
+        src/multiThreadSuite.cpp
+        include/multiThreadSuite.h
 )
 
 if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL GNU)

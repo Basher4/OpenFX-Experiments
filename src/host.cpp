@@ -5,6 +5,7 @@
 #include "host.h"
 
 #include "imageEffectSuite.h"
+#include "multiThreadSuite.h"
 
 #include <cstdio>
 #include <string>
@@ -22,6 +23,7 @@ Host::Host()
     m_HostProps.SetPointer(kOfxPropertySuite, 1, PropertySet::as_suite());
     m_HostProps.SetPointer(kOfxMemorySuite, 1, MemorySuite::get_suite());
     m_HostProps.SetPointer(kOfxImageEffectSuite, 1, ImageEffectSuite::as_suite());
+    m_HostProps.SetPointer(kOfxMultiThreadSuite, 1, MultiThreadSuite::get_suite());
 }
 
 const void* Host::s_hostFetchSuite(OfxPropertySetHandle handle, const char* suiteName, int suiteVersion)
