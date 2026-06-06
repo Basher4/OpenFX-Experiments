@@ -123,6 +123,12 @@ void PropertySet::DebugPrint()
         const auto& [property, index] = key;
         std::print("    {}[{}] = \"{}\"\n", property, index, value);
     }
+
+    std::print("  Double properties ({})\n", m_PropsDouble.size());
+    for (const auto& [key, value] : m_PropsDouble) {
+        const auto& [property, index] = key;
+        std::print("    {}[{}] = {}\n", property, index, value);
+    }
 }
 
 void PropertySet::Clear()

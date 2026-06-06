@@ -66,9 +66,12 @@ OfxResult<void> RenderImageWithOfx(const char* path, image::Image& srcImg)
     inArgs.SetString(kOfxImageEffectPropContext, 0, kOfxImageEffectContextGeneral);
     OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxImageEffectActionDescribeInContext,
         "ImageEffect describing plugin in context", effect.OfxHandle(), inArgs.OfxHandle()));
-    std::print("Plugin description in general context:\n");
+    std::print("Plugin description in general context, including parameter set:\n");
     effect.DebugPrint();
     inArgs.Clear();
+
+    // TODO: Create instance
+    OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxActionCreateInstance, "Creating instance", effect.OfxHandle()));
 
     // Render one frame of the plugin.
     auto srcClip = *effect.GetClip(kOfxImageEffectSimpleSourceClipName);
@@ -78,10 +81,16 @@ OfxResult<void> RenderImageWithOfx(const char* path, image::Image& srcImg)
     outClip->SetImageRef(&srcRef);
     // nb. Modify the image in place. Probably not always valid but oh hey.
 
+    // TODO: For basic plugin - set `scale` parameter to something
+
+
     inArgs.SetDouble(kOfxPropTime, 0, 0.0);
     inArgs.SetN(kOfxImageEffectPropRenderWindow, { 0, 0, (int)srcImg.width() / 2, (int)srcImg.height() });
     OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxImageEffectActionRender,
         "ImageEffect render", effect.OfxHandle(), inArgs.OfxHandle()));
+
+    // TODO: Destroy instance
+    OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxActionDestroyInstance, "Destroying instance", effect.OfxHandle()));
 
     // Cleanup.
     OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxActionUnload, "Unloading plugin"));

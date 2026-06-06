@@ -33,5 +33,9 @@ void ImageEffect::DebugPrint()
         std::print("--------------------\n");
     }
 
+    std::print("Effect parameters\n");
+    m_ParamSet.DebugPrint();
+    std::print("--------------------\n");
+
     std::print("====================\n\n");
 }

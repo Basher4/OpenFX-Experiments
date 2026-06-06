@@ -15,8 +15,9 @@
 #include <openfx/ofxMessage.h>
 #include <openfx/ofxProperty.h>
 
-#include "messageSuiteV1.h"
 #include "memorySuite.h"
+#include "messageSuiteV1.h"
+#include "parameterSet.h"
 
 Host::Host()
 {
@@ -24,6 +25,7 @@ Host::Host()
     m_OfxHost.fetchSuite = &Host::s_hostFetchSuite;
 
     // Initialize hashmap of property suites.
+    m_HostProps.SetPointer(kOfxParameterSuite, 1, ParameterSet::get_suite());
     m_HostProps.SetPointer(kOfxPropertySuite, 1, PropertySet::as_suite());
     m_HostProps.SetPointer(kOfxMemorySuite, 1, MemorySuite::get_suite());
     m_HostProps.SetPointer(kOfxMessageSuite, 1, MessageSuiteV1::get_suite());

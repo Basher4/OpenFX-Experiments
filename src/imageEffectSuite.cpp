@@ -12,7 +12,9 @@ OfxImageEffectSuiteV1* ImageEffectSuite::as_suite()
             return kOfxStatOK;
         },
         .getParamSet = [](OfxImageEffectHandle imageEffect, OfxParamSetHandle *paramSet) {
-            return kOfxStatErrFatal;
+            auto effect = reinterpret_cast<ImageEffect*>(imageEffect);
+            *paramSet = effect->ParamSetOfxHandle();
+            return kOfxStatOK;
         },
         .clipDefine = [](OfxImageEffectHandle imageEffect, const char *name, OfxPropertySetHandle *propertySet) {
             auto effect = reinterpret_cast<ImageEffect*>(imageEffect);
