@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <mutex>
-#include <mutex>
+#include <thread>
 
 OfxStatus MultiThreadSuite::spawn(OfxThreadFunctionV1 func, unsigned int nThreads, void* customArg)
 {
