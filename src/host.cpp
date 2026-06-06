@@ -12,7 +12,11 @@
 
 #include <openfx/ofxImageEffect.h>
 #include <openfx/ofxMemory.h>
+#include <openfx/ofxMessage.h>
 #include <openfx/ofxProperty.h>
+
+#include "messageSuiteV1.h"
+#include "memorySuite.h"
 
 Host::Host()
 {
@@ -22,6 +26,7 @@ Host::Host()
     // Initialize hashmap of property suites.
     m_HostProps.SetPointer(kOfxPropertySuite, 1, PropertySet::as_suite());
     m_HostProps.SetPointer(kOfxMemorySuite, 1, MemorySuite::get_suite());
+    m_HostProps.SetPointer(kOfxMessageSuite, 1, MessageSuiteV1::get_suite());
     m_HostProps.SetPointer(kOfxImageEffectSuite, 1, ImageEffectSuite::as_suite());
     m_HostProps.SetPointer(kOfxMultiThreadSuite, 1, MultiThreadSuite::get_suite());
 }

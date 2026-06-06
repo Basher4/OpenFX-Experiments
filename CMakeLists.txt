@@ -14,6 +14,8 @@ add_subdirectory(plugins)
 add_executable(openfx_experiments main.cpp
         src/imageIo.cpp
         src/host.cpp
+        src/memorySuite.cpp
+        src/messageSuiteV1.cpp
         src/propertySet.cpp
         src/imageEffectSuite.cpp
         include/imageEffectSuite.h
