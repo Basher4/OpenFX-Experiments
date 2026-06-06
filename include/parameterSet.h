@@ -111,7 +111,7 @@ public:
     std::optional<Parameter*> GetParameter(std::string_view name);
 
     OfxParamSetHandle OfxHandle() { return reinterpret_cast<OfxParamSetHandle>(this); }
-    static OfxParameterSuiteV1* get_suite();
+    static OfxParameterSuiteV1* as_suite();
 
     void DebugPrint();
 

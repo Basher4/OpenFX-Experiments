@@ -116,7 +116,7 @@ OfxStatus MultiThreadSuite::mutexTryLock(const OfxMutexHandle mutex)
     return _mutex->try_lock() ? kOfxStatOK : kOfxStatFailed;
 }
 
-OfxMultiThreadSuiteV1* MultiThreadSuite::get_suite()
+OfxMultiThreadSuiteV1* MultiThreadSuite::as_suite()
 {
     static OfxMultiThreadSuiteV1 g_MultiThreadSuite {
         .multiThread = spawn,

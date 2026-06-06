@@ -14,7 +14,7 @@ OfxStatus MemorySuite::memoryFree(void *allocatedData)
     return kOfxStatOK;
 }
 
-OfxMemorySuiteV1* MemorySuite::get_suite()
+OfxMemorySuiteV1* MemorySuite::as_suite()
 {
     static OfxMemorySuiteV1 g_MemorySuite {
         .memoryAlloc = memoryAlloc,

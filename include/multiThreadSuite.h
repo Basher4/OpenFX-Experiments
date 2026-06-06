@@ -5,7 +5,7 @@
 
 class MultiThreadSuite {
 public:
-    static OfxMultiThreadSuiteV1* get_suite();
+    static OfxMultiThreadSuiteV1* as_suite();
 
 private:
     // Ofx exports

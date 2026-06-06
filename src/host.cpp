@@ -25,12 +25,12 @@ Host::Host()
     m_OfxHost.fetchSuite = &Host::s_hostFetchSuite;
 
     // Initialize hashmap of property suites.
-    m_HostProps.SetPointer(kOfxParameterSuite, 1, ParameterSet::get_suite());
+    m_HostProps.SetPointer(kOfxParameterSuite, 1, ParameterSet::as_suite());
     m_HostProps.SetPointer(kOfxPropertySuite, 1, PropertySet::as_suite());
-    m_HostProps.SetPointer(kOfxMemorySuite, 1, MemorySuite::get_suite());
-    m_HostProps.SetPointer(kOfxMessageSuite, 1, MessageSuiteV1::get_suite());
+    m_HostProps.SetPointer(kOfxMemorySuite, 1, MemorySuite::as_suite());
+    m_HostProps.SetPointer(kOfxMessageSuite, 1, MessageSuiteV1::as_suite());
     m_HostProps.SetPointer(kOfxImageEffectSuite, 1, ImageEffectSuite::as_suite());
-    m_HostProps.SetPointer(kOfxMultiThreadSuite, 1, MultiThreadSuite::get_suite());
+    m_HostProps.SetPointer(kOfxMultiThreadSuite, 1, MultiThreadSuite::as_suite());
 }
 
 const void* Host::s_hostFetchSuite(OfxPropertySetHandle handle, const char* suiteName, int suiteVersion)

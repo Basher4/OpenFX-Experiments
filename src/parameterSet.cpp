@@ -79,7 +79,7 @@ void ParameterSet::DebugPrint()
     }
 }
 
-OfxParameterSuiteV1* ParameterSet::get_suite()
+OfxParameterSuiteV1* ParameterSet::as_suite()
 {
     static OfxParameterSuiteV1 sParamSuite {
         .paramDefine = [](OfxParamSetHandle handle, const char* paramType, const char* paramName, OfxPropertySetHandle* propertySet) {

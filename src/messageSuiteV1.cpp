@@ -17,7 +17,7 @@ OfxStatus MessageSuiteV1::message(void *handle, const char *messageType, const c
     return kOfxStatOK;
 }
 
-OfxMessageSuiteV1* MessageSuiteV1::get_suite()
+OfxMessageSuiteV1* MessageSuiteV1::as_suite()
 {
     g_MessageSuite.message = MessageSuiteV1::message;
     return &g_MessageSuite;
