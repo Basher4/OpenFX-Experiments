@@ -1,12 +1,51 @@
 #include "multiThreadSuite.h"
 
+#include <vector>
 #include <cassert>
 #include <mutex>
 #include <thread>
 
+namespace {
+thread_local bool t_IsSpawnedThread = false;
+thread_local uint32_t t_ThreadIndex = 0;
+
+struct SpawnedThreadGuard {
+    SpawnedThreadGuard(uint32_t index)
+    {
+        t_IsSpawnedThread = true;
+        t_ThreadIndex = index;
+    }
+
+    ~SpawnedThreadGuard()
+    {
+        t_ThreadIndex = 0;
+        t_IsSpawnedThread = false;
+    }
+};
+}
+
 OfxStatus MultiThreadSuite::spawn(OfxThreadFunctionV1 func, unsigned int nThreads, void* customArg)
 {
-    return kOfxStatFailed;
+    // Worker threads are not allowed to spawn more worker threads.
+    if (t_IsSpawnedThread) {
+        return kOfxStatErrExists;
+    }
+
+    std::vector<std::thread> threads;
+
+    nThreads = std::min(nThreads, std::thread::hardware_concurrency());
+    for (uint32_t i = 0; i < nThreads; ++i) {
+        threads.emplace_back([=] {
+            SpawnedThreadGuard guard(i);
+            func(i, nThreads, customArg);
+        });
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    return kOfxStatOK;
 }
 
 OfxStatus MultiThreadSuite::multiThreadNumCPUs(unsigned int* nCPUs)
@@ -17,12 +56,13 @@ OfxStatus MultiThreadSuite::multiThreadNumCPUs(unsigned int* nCPUs)
 
 OfxStatus MultiThreadSuite::multiThreadIndex(unsigned int* threadIndex)
 {
-    assert(false && "Not implemented");
+    *threadIndex = t_ThreadIndex;
+    return kOfxStatOK;
 }
 
 int MultiThreadSuite::multiThreadIsSpawnedThread()
 {
-    assert(false && "Not implemented");
+    return t_IsSpawnedThread;
 }
 
 OfxStatus MultiThreadSuite::mutexCreate(OfxMutexHandle* mutex, int lockCount)
