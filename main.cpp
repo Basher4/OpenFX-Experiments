@@ -70,7 +70,6 @@ OfxResult<void> RenderImageWithOfx(const char* path, image::Image& srcImg)
     effect.DebugPrint();
     inArgs.Clear();
 
-    // TODO: Create instance
     OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxActionCreateInstance, "Creating instance", effect.OfxHandle()));
 
     // Render one frame of the plugin.
@@ -81,7 +80,12 @@ OfxResult<void> RenderImageWithOfx(const char* path, image::Image& srcImg)
     outClip->SetImageRef(&srcRef);
     // nb. Modify the image in place. Probably not always valid but oh hey.
 
-    // TODO: For basic plugin - set `scale` parameter to something
+    // For basic plugin - set `scale` parameter to something
+    effect.Parameters().Get<ParameterType::Double>("scale").Set(1.2);
+    effect.Parameters().Get<ParameterType::Boolean>("scaleComponents").Set(true);
+    effect.Parameters().Get<ParameterType::Double>("scaleR").Set(2);
+    effect.Parameters().Get<ParameterType::Double>("scaleG").Set(1);
+    effect.Parameters().Get<ParameterType::Double>("scaleB").Set(0.5);
 
 
     inArgs.SetDouble(kOfxPropTime, 0, 0.0);
@@ -89,7 +93,6 @@ OfxResult<void> RenderImageWithOfx(const char* path, image::Image& srcImg)
     OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxImageEffectActionRender,
         "ImageEffect render", effect.OfxHandle(), inArgs.OfxHandle()));
 
-    // TODO: Destroy instance
     OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxActionDestroyInstance, "Destroying instance", effect.OfxHandle()));
 
     // Cleanup.
