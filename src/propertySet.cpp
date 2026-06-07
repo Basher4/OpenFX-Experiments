@@ -27,6 +27,7 @@ OfxStatus PropertySet::GetString(std::string_view property, int index, char** va
     const auto key = std::make_tuple(std::string{property}, index);
     const auto it = m_PropsString.find(key);
     if (it == m_PropsString.end()) {
+        *value = nullptr;
         return kOfxStatErrUnknown;
     }
 

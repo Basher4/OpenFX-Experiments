@@ -47,7 +47,11 @@ private:
     OfxStatus Get(const std::map<Key, T>& props, std::string_view property, int index, T* out)
     {
         const auto it = props.find(Key{property, index});
-        if (it == props.end()) return kOfxStatErrUnknown;
+        if (it == props.end())
+        {
+            *out = T{};
+            return kOfxStatErrUnknown;
+        }
         *out = it->second;
         return kOfxStatOK;
     }
