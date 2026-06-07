@@ -2,19 +2,50 @@
 #include "propertySet.h"
 
 #include <algorithm>
+#include <cstdarg>
 #include <print>
 #include <ranges>
-#include <vector>
 
 namespace {
-OfxStatus UnsupportedParamGetValue(OfxParamHandle, ...)
+OfxStatus ParamGetValueV(OfxParamHandle handle, va_list args)
 {
-    return kOfxStatErrUnsupported;
+    const auto param = reinterpret_cast<ParameterBase*>(handle);
+    param->GetToVariadic(args);
+
+    return kOfxStatOK;
 }
 
-OfxStatus UnsupportedParamGetValueAtTime(OfxParamHandle, OfxTime, ...)
+OfxStatus ParamSetValueV(OfxParamHandle handle, va_list args)
 {
-    return kOfxStatErrUnsupported;
+    const auto param = reinterpret_cast<ParameterBase*>(handle);
+    param->SetFromVariadic(args);
+
+    return kOfxStatOK;
+}
+
+OfxStatus ParamGetValue(OfxParamHandle handle, ...)
+{
+    va_list args;
+    va_start(args, handle);
+
+    const OfxStatus status = ParamGetValueV(handle, args);
+
+    va_end(args);
+
+    return status;
+}
+
+// No keyframe support, always time 0;
+OfxStatus ParamGetValueAtTime(OfxParamHandle handle, OfxTime time, ...)
+{
+    va_list args;
+    va_start(args, time);
+
+    const OfxStatus status = ParamGetValueV(handle, args);
+
+    va_end(args);
+
+    return status;
 }
 
 OfxStatus UnsupportedParamGetDerivative(OfxParamHandle, OfxTime, ...)
@@ -27,40 +58,39 @@ OfxStatus UnsupportedParamGetIntegral(OfxParamHandle, OfxTime, OfxTime, ...)
     return kOfxStatErrUnsupported;
 }
 
-OfxStatus UnsupportedParamSetValue(OfxParamHandle, ...)
+OfxStatus ParamSetValue(OfxParamHandle handle, ...)
 {
-    return kOfxStatErrUnsupported;
+    va_list args;
+    va_start(args, handle);
+
+    const OfxStatus status = ParamSetValueV(handle, args);
+
+    va_end(args);
+
+    return status;
 }
 
-OfxStatus UnsupportedParamSetValueAtTime(OfxParamHandle, OfxTime, ...)
+OfxStatus ParamSetValueAtTime(OfxParamHandle handle, OfxTime time, ...)
 {
-    return kOfxStatErrUnsupported;
+    va_list args;
+    va_start(args, time);
+
+    const OfxStatus status = ParamSetValueV(handle, args);
+
+    va_end(args);
+
+    return status;
 }
 }
 
-void Parameter::DebugPrint()
+void ParameterBase::DebugPrint()
 {
-    std::print("Parameter '{}' ({})\n", m_Name, ToOfxParamTypeString(m_Type));
+    std::print("Parameter '{}' ({})\n", m_Name, m_Type.ToOfxName());
     m_Properties.DebugPrint();
     std::print("\n");
 }
 
-OfxStatus ParameterSet::Define(std::string_view name, ParameterType type, OfxPropertySetHandle* propertySet)
-{
-    const std::string name_owned { name };
-    if (m_Parameters.contains(name_owned)) {
-        return kOfxStatErrExists;
-    }
-
-    const auto [it, _] = m_Parameters.emplace(name_owned, std::make_unique<Parameter>(name_owned, type));
-    if (propertySet) {
-        *propertySet = it->second->PropertySetOfxHandle();
-    }
-
-    return kOfxStatOK;
-}
-
-std::optional<Parameter*> ParameterSet::GetParameter(std::string_view name)
+std::optional<ParameterBase*> ParameterSet::GetParameter(std::string_view name)
 {
     const auto it = m_Parameters.find(std::string{name});
     if (it == m_Parameters.end()) {
@@ -74,8 +104,8 @@ void ParameterSet::DebugPrint()
 {
     std::print("ParameterSet ({} parameters)\n", m_Parameters.size());
 
-    for (const auto& parameter : m_Parameters) {
-        parameter.second->DebugPrint();
+    for (const auto& param : m_Parameters | std::views::values) {
+        param->DebugPrint();
     }
 }
 
@@ -83,13 +113,49 @@ OfxParameterSuiteV1* ParameterSet::as_suite()
 {
     static OfxParameterSuiteV1 sParamSuite {
         .paramDefine = [](OfxParamSetHandle handle, const char* paramType, const char* paramName, OfxPropertySetHandle* propertySet) {
-            auto paramSet = reinterpret_cast<ParameterSet*>(handle);
-            const auto type = ParameterTypeFromString(paramType);
-            if (!type) {
+            const auto paramSet = reinterpret_cast<ParameterSet*>(handle);
+            const auto type = ParameterType::FromOfxName(paramType);
+            if (!type)
+            {
                 return kOfxStatErrUnknown;
             }
 
-            return paramSet->Define(paramName, *type, propertySet); },
+            switch (*type)
+            {
+            case ParameterType::Integer:
+                return paramSet->Define<ParameterType::Integer>(paramName, propertySet);
+            case ParameterType::Double:
+                return paramSet->Define<ParameterType::Double>(paramName, propertySet);
+            case ParameterType::Boolean:
+                return paramSet->Define<ParameterType::Boolean>(paramName, propertySet);
+            case ParameterType::Choice:
+                return paramSet->Define<ParameterType::Choice>(paramName, propertySet);
+            case ParameterType::RGBA:
+                return paramSet->Define<ParameterType::RGBA>(paramName, propertySet);
+            case ParameterType::RGB:
+                return paramSet->Define<ParameterType::RGB>(paramName, propertySet);
+            case ParameterType::Double2D:
+                return paramSet->Define<ParameterType::Double2D>(paramName, propertySet);
+            case ParameterType::Integer2D:
+                return paramSet->Define<ParameterType::Integer2D>(paramName, propertySet);
+            case ParameterType::Double3D:
+                return paramSet->Define<ParameterType::Double3D>(paramName, propertySet);
+            case ParameterType::Integer3D:
+                return paramSet->Define<ParameterType::Integer3D>(paramName, propertySet);
+            case ParameterType::String:
+                return paramSet->Define<ParameterType::String>(paramName, propertySet);
+            case ParameterType::Custom:
+                return paramSet->Define<ParameterType::Custom>(paramName, propertySet);
+            case ParameterType::Group:
+                return paramSet->Define<ParameterType::Group>(paramName, propertySet);
+            case ParameterType::Page:
+                return paramSet->Define<ParameterType::Page>(paramName, propertySet);
+            case ParameterType::PushButton:
+                return paramSet->Define<ParameterType::PushButton>(paramName, propertySet);
+            default:
+                return kOfxStatErrUnknown;
+            }
+        },
         .paramGetHandle = [](OfxParamSetHandle handle, const char* name, OfxParamHandle* out_paramHandle, OfxPropertySetHandle* out_propSetHandle) {
             auto paramSet = reinterpret_cast<ParameterSet*>(handle);
             auto param = paramSet->GetParameter(name);
@@ -107,12 +173,12 @@ OfxParameterSuiteV1* ParameterSet::as_suite()
         },
         .paramSetGetPropertySet = [](OfxParamSetHandle, OfxPropertySetHandle*) { return kOfxStatErrUnsupported; },
         .paramGetPropertySet = [](OfxParamHandle, OfxPropertySetHandle*) { return kOfxStatErrUnsupported; },
-        .paramGetValue = UnsupportedParamGetValue,
-        .paramGetValueAtTime = UnsupportedParamGetValueAtTime,
+        .paramGetValue = ParamGetValue,
+        .paramGetValueAtTime = ParamGetValueAtTime,
         .paramGetDerivative = UnsupportedParamGetDerivative,
         .paramGetIntegral = UnsupportedParamGetIntegral,
-        .paramSetValue = UnsupportedParamSetValue,
-        .paramSetValueAtTime = UnsupportedParamSetValueAtTime,
+        .paramSetValue = ParamSetValue,
+        .paramSetValueAtTime = ParamSetValueAtTime,
         .paramGetNumKeys = [](OfxParamHandle, unsigned int*) { return kOfxStatErrUnsupported; },
         .paramGetKeyTime = [](OfxParamHandle, unsigned int, OfxTime*) { return kOfxStatErrUnsupported; },
         .paramGetKeyIndex = [](OfxParamHandle, OfxTime, int, int*) { return kOfxStatErrUnsupported; },
