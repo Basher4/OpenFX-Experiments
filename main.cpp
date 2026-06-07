@@ -63,6 +63,8 @@ OfxResult<void> RenderImageWithOfx(const char* path, image::Image& srcImg)
     OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxActionDescribe, "Describing plugin", effect.OfxHandle()));
 
     // Describe in general context.
+    effect.Properties().SetString(kOfxImageEffectPropContext, 0, kOfxImageEffectContextGeneral);
+
     inArgs.SetString(kOfxImageEffectPropContext, 0, kOfxImageEffectContextGeneral);
     OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxImageEffectActionDescribeInContext,
         "ImageEffect describing plugin in context", effect.OfxHandle(), inArgs.OfxHandle()));
@@ -80,16 +82,14 @@ OfxResult<void> RenderImageWithOfx(const char* path, image::Image& srcImg)
     outClip->SetImageRef(&srcRef);
     // nb. Modify the image in place. Probably not always valid but oh hey.
 
-    // For basic plugin - set `scale` parameter to something
-    effect.Parameters().Get<ParameterType::Double>("scale").Set(1.2);
-    effect.Parameters().Get<ParameterType::Boolean>("scaleComponents").Set(true);
-    effect.Parameters().Get<ParameterType::Double>("scaleR").Set(2);
-    effect.Parameters().Get<ParameterType::Double>("scaleG").Set(1);
-    effect.Parameters().Get<ParameterType::Double>("scaleB").Set(0.5);
+    effect.Parameters().Get<ParameterType::Double2D>("corner1").Set({10, 10});
+    effect.Parameters().Get<ParameterType::Double2D>("corner2").Set({100, 100});
+    effect.Parameters().Get<ParameterType::RGBA>("colour").Set({1.0, 0.0, 1.0, 1.0});
 
 
     inArgs.SetDouble(kOfxPropTime, 0, 0.0);
     inArgs.SetN(kOfxImageEffectPropRenderWindow, { 0, 0, (int)srcImg.width() / 2, (int)srcImg.height() });
+    inArgs.SetN(kOfxImageEffectPropRenderScale, { 1.0, 1.0 });
     OFX_RETURN_IF_ERROR(PluginMain(plugin, kOfxImageEffectActionRender,
         "ImageEffect render", effect.OfxHandle(), inArgs.OfxHandle()));
 
@@ -138,7 +138,7 @@ OfxResult<void> PluginMain(
 {
     std::print("{}...\n", msg);
     OfxStatus status = plugin->mainEntry(action, handle, inArgs, outArgs);
-    if (status != kOfxStatOK) {
+    if (status != kOfxStatOK && status != kOfxStatReplyDefault) {
         std::print("Failed with {}\n", status);
         return std::unexpected { status };
     }

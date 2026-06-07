@@ -40,7 +40,9 @@ OfxImageEffectSuiteV1* ImageEffectSuite::as_suite()
             return kOfxStatOK;
         },
         .clipGetPropertySet = [](OfxImageClipHandle clip, OfxPropertySetHandle *propHandle) {
-            return kOfxStatErrFatal;
+            auto effectClip = reinterpret_cast<ImageEffectClip*>(clip);
+            *propHandle = effectClip->Properties().OfxHandle();
+            return kOfxStatOK;
         },
         .clipGetImage = [](OfxImageClipHandle clip, OfxTime time, const OfxRectD *region, OfxPropertySetHandle *imageHandle) {
             auto effectClip = reinterpret_cast<ImageEffectClip*>(clip);

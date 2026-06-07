@@ -11,6 +11,8 @@ OfxResult<OfxPropertySetHandle> ImageEffect::ClipDefine(std::string_view name)
     }
 
     m_Clips[name_owned] = std::make_unique<ImageEffectClip>(name);
+    m_Clips[name_owned]->Properties().SetString(kOfxImageEffectPropPreMultiplication, 0, kOfxImageUnPreMultiplied);
+
     return m_Clips[name_owned]->Properties().OfxHandle();
 }
 
